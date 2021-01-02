@@ -26,25 +26,25 @@ cp config/server.properties config/server1.properties
 cp config/server.properties config/server2.properties
 cp config/server.properties config/server3.properties
 ```
-# Modify the following for server1.properties
+### Modify the following for server1.properties
 ```
 broker.id=1
 listeners= PLAINTEXT://:9093
 log.dirs=/tmp/kafka-logs1
 ```
-# Modify the following for server2.properties
+## Modify the following for server2.properties
 ```
 broker.id=2
 listeners= PLAINTEXT://:9094
 log.dirs=/tmp/kafka-logs2
 ```
-# Modify the following for server3.properties
+### Modify the following for server3.properties
 ```
 broker.id=3
 listeners= PLAINTEXT://:9095
 log.dirs=/tmp/kafka-logs3
 ```
-## Start the bootstrap servers
+### Start the bootstrap servers
 ```
 bin/kafka-server-start.sh config/server1.properties
 bin/kafka-server-start.sh config/server2.properties

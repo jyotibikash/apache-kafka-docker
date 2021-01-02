@@ -5,21 +5,21 @@ docker run --rm -it --name my-kafka-img kafka:2.13 bash
 # **For joining the container session**
 docker exec -it $(docker ps -q --filter="NAME=mykafka-img") bash
 
-# **Start the single Kafka Server (Bootstrap Server)**
+# **Start the single Kafka Server (broker)**
 ## Kafka Home: /opt/kafka
 
 cd $KAFKA_HOME
 ## Start the zookeeper
 bin/zookeeper-server-start.sh config/zookeeper.properties
-## Start the bootstrap server
+## Start the broker 
 bin/kafka-server-start.sh config/server.properties
 
-### Check the port listening as the zookeeper listen on 2181 and bootstrap server listens on 9092
+### Check the port listening as the zookeeper listen on 2181 and broker server listens on 9092
 lsof -nP -iTCP -sTCP:LISTEN 
 
 
 
-# **For multi broker/bootstrap server**
+# **For multi broker**
 ```cd $KAFKA_HOME
 bin/zookeeper-server-start.sh config/zookeeper.properties
 cp config/server.properties config/server1.properties
@@ -44,7 +44,7 @@ broker.id=3
 listeners= PLAINTEXT://:9095
 log.dirs=/tmp/kafka-logs3
 ```
-### Start the bootstrap servers
+### Start the brokers
 ```
 bin/kafka-server-start.sh config/server1.properties
 bin/kafka-server-start.sh config/server2.properties
@@ -56,19 +56,19 @@ cd $KAFKA_HOME
 bin/kafka-topics.sh --create --topic my-first-topic --zookeeper localhost:2181 --partitions 1 --replication-factor 3
 ```
 ### So what we have done is 
-*Commands: 
-    *-- topic: topic name
-    *--zookeeper: zookeeper host:port
-    *--partitions: How many partitions each bootstrap server will have for parallel processing
-    *--replication-factor: This will decide how many copies we have to keep for data
+Commands:
+   - -- topic: topic name
+   - ---zookeeper: zookeeper host:port
+   - --partitions: How many partitions each broker will have for parallel processing
+   - --replication-factor: How many copies of data to be kept for fault tolerance
 
 #### So the above command is telling that we want to create a topic which will be having 1 partition across the botstrap server and with 3 replicas. This can be verified by the following.
 ```
 bin/kafka-topics.sh --describe --topic my-first-topic --zookeeper localhost:2181
 *Topic: my-first-topic   PartitionCount: 1       ReplicationFactor: 3    Configs: Topic: my-first-topic   Partition:     Leader: 3       Replicas: 3,1,2  Isr: 3,1,2*
 ```
-### So the above tells zookeeper though we have 3 bootstrap-servers listening on 9093,9094,9095 to elect one as leader which is 3 in our case and (1 and 2 are worker). Also under each we have 3 replicas of data store.
-**Replicas: There are 3 replication of our data which zookeeper matching with ISR (In-Sync Replicas) which in case will be auto mapped by zookeeper in case any fault-tolerance**
+### So the above tells zookeeper though we have 3 brokers listening on 9093,9094,9095 to elect one as leader which is 3 in our case and (1 and 2 are worker). Also under each we have 3 replicas of data store.
+**Replicas**: There are 3 replication of our data which zookeeper matching with ISR (In-Sync Replicas) to tolerate leader/worker failure.
 
 ### With all this set let us publish some messages and consume that in another session.
 ```
@@ -82,16 +82,16 @@ Second Message
 ```
 **Notice here we have different ports added for producer and consumer but this is managed by the zookeeper which is the leader node and which are workers. So the message will flow to the leader and then the leader will flow the messages to the workers. Each of the messages are replicated thrice as replica is 3.**
 
-### Lets do some fault-tolerance test by shutting down the bootstrap-server 2 listening on 9094
+### Lets do some fault-tolerance test by shutting down the broker 2 listening on 9094
 once we shut it down then lets see the description of the topic.
 ```
 bin/kafka-topics.sh --describe --topic my-first-topic --zookeeper localhost:2181
 ```
 Topic: my-first-topic   PartitionCount: 1       ReplicationFactor: 3    Configs:
     Topic: my-first-topic   Partition: 0    Leader: 3       Replicas: 3,1,2  *Isr: 3,1*
-Zookeeper found the broker number 2 is unhealthy and so though the replicas are 3,1,2 but the in-sync-replicas are 2 and thats 3,1. 
+Zookeeper found the broker number 2 is unhealthy and updated the in-sync-replicas to 2 and thats 3,1. 
 
-*Also after we restart it again it will show like this.*
+*Also after we restart the broker2 again it will show like this.*
 ```
 bin/kafka-topics.sh --describe --topic my-first-topic --zookeeper localhost:2181
 ```
@@ -126,7 +126,7 @@ bin/kafka-topics.sh --describe --topic my-first-topic --zookeeper localhost:2181
 Topic: my-first-topic   PartitionCount: 1       ReplicationFactor: 3    Configs: 
         Topic: my-first-topic   Partition: 0    **Leader: 1**       Replicas: 3,1,2    *Isr: 1,2,3*
 
-Here Leader remains same but ISR is updated. Lets consume messages from this broker which is just started which is unknown about the Third Message.
+Here Leader remains same but ISR is updated. Lets consume messages from this broker which is just started and unknown about the Third Message.
 ```
 bin/kafka-console-consumer.sh --bootstrap-server localhost:9095 --topic my-first-topic --from-beginning
 ```

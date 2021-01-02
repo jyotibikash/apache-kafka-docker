@@ -64,8 +64,8 @@ bin/kafka-topics.sh --describe --topic my-first-topic --zookeeper localhost:2181
 
 ### With all this set let us publish some messages and consume that in another session.
 bin/kafka-console-producer.sh --bootstrap-server localhost:9093 --topic my-first-topic
-> First Message
-> Second Message
+First Message
+Second Message
 
 bin/kafka-console-consumer.sh --bootstrap-server localhost:9094 --topic my-first-topic --from-beginning
 First Message
@@ -100,7 +100,7 @@ Also as the producer and consumer knew it was the leader previously so, it will 
 Lets publish some messages and consume that.
 
 bin/kafka-console-producer.sh --bootstrap-server localhost:9093 --topic my-first-topic
-> Third message
+ Third message
 
 Now consume that from may be broker 2
 Third message

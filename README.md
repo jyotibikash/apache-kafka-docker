@@ -11,7 +11,7 @@ docker exec -it $(docker ps -q --filter="NAME=mykafka-img") bash
 cd $KAFKA_HOME
 ## Start the zookeeper
 bin/zookeeper-server-start.sh config/zookeeper.properties
-## Start the broker 
+## Start the broker (--bootstrap-server)
 bin/kafka-server-start.sh config/server.properties
 
 ### Check the port listening as the zookeeper listen on 2181 and broker server listens on 9092
@@ -19,7 +19,7 @@ lsof -nP -iTCP -sTCP:LISTEN
 
 
 
-# **For multi broker**
+# **For multi broker (--bootstrap-server)**
 ```cd $KAFKA_HOME
 bin/zookeeper-server-start.sh config/zookeeper.properties
 cp config/server.properties config/server1.properties
@@ -55,12 +55,14 @@ bin/kafka-server-start.sh config/server3.properties
 cd $KAFKA_HOME
 bin/kafka-topics.sh --create --topic my-first-topic --zookeeper localhost:2181 --partitions 1 --replication-factor 3
 ```
+**NB: --zookeeper can be replaced by --bootstrap-server and point to the brokers e.g. --bootstrap-server localhost:9092**
 ### So what we have done is 
 Commands:
    - -- topic: topic name
    - ---zookeeper: zookeeper host:port
    - --partitions: How many partitions each broker will have for parallel processing
-   - --replication-factor: How many copies of data to be kept for fault tolerance
+   - --replication-factor: How many partition copies of data to be kept for fault tolerance [**The number of replication is equal to the number of brokers as each partitions resides inside the broker.**]
+   
 
 #### So the above command is telling that we want to create a topic which will be having 1 partition across the botstrap server and with 3 replicas. This can be verified by the following.
 ```

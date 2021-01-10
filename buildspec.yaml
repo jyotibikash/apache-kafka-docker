@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+      #Retrieve an authentication token and authenticate your Docker client to your registry
+      - aws ecr get-login-password --region <ecr-region> | docker login --username <username> --password-stdin <ecr-uri>
+  build:
+    commands:
+      - echo Build started on `date`
+      - docker build -t mykafka:2.13 .
+      - docker tag mykafka:2.13 <ecr-uri>/kafka-docker:latest 
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push <ecr-uri>/kafka-docker:latest
